@@ -1,0 +1,636 @@
+# CTools
+
+
+                            CTools  -  HELP FILE
+
+
+GENERAL INFO:
+
+   Syntax=>
+
+     CDuplicate(float "thr", float "thr2", int "nt", bool "fields", clip "dClip", bool "write")
+     CReplaceDuplicate(bool "drop")
+     CInterpolateDuplicate(float "thr", int "nt", clip "dClip", clip "iClip")
+     
+     CSharpen(clip "blur", int "nt", int "mode", bool "Y", bool "U", bool "V")
+     CDeHalo(clip "blur", int "nt", int "mode", bool "Y", bool "U", bool "V")
+     CAntiAliasing(int "nt", int "mode", bool "Y", bool "U", bool "V")
+     CTemporalSoften(int "radius", bool "isb", bool "Y", bool "U", bool "V")
+     CDegrain(int "radius", int "nt", int "thr", int "blksize", clip "dClip")
+     CSceneChange(clip "sClip", int "blksize", int "thSCD1", int "thSCD2", int "minKey", int "maxLuma", bool "write", bool "inputTxt")
+
+     CTelecine(bool "bob", int "mode", int "nt", int "ntN", bool "sse", float "thr60i", int "nt60i", float "sstr", float "mode2thr", clip "dClip", bool "write", bool "inputTxt")
+     CPostProcessing(int "thr", int "thr2", int "mode", int "blksize", int "blkthr", bool "isBob", float "sstr", int "nt", int "ntMask", clip "edeint", clip "edeint2")
+     CFieldDeBlend(float "thr", float "thr2", int "nt", int "thrC", int "blksize", int "blkthr", float "sstr", clip "dClip")
+     CDecimate(bool "isBob", bool "error", bool "heuristic", clip "iClip")
+     CSetPattern(int "start", int "end", bool "CCCCC", bool "NNCCC", bool "CNNCC", bool "CCNNC", bool "CCCNN", bool "NCCCN")
+     
+CDUPLICATE PARAMETERS:
+
+     If write is false, the filter will subtitle the video telling you if the current frame is a duplicate or not.
+     Lacks a conditional version that might come in the future.
+
+     thr, thr2 -
+         
+         Duplicate threshold. Higher values means more duplicate.
+         There are two thr so that you can compare better the output.
+         Thr2 is also useful if fields = true, so that you take the one that gives you a XOR if you need.
+                  
+         Default: 0.25, 2.0 (float)
+
+     nt - 
+         
+         Noise threshold. Every difference lower than nt is ignored.
+
+         Default:  5  (int)
+     
+     fields -
+
+         If true, instead of doing a frame based detection, it does a field one.
+
+         Default: false (bool)
+
+     dClip - 
+
+         Set an external clip for the duplicate detection.
+
+         Default: NULL (clip)
+
+     write -
+
+         Write the filter output in an external txt file to be used with other CFilters or for some python business.
+	 The format is 0 (not duplicate) or 1 (duplicate).
+         
+         Default: false (bool)
+
+CREPLACEDUPLICATE PARAMETERS:
+
+     This function will replace all duplicate frames with the non-duplicate to which they refer to.
+
+     drop -
+         
+         If true, instead of replacing the duplicates, it will drop them by returning a clip with a lower frame count.
+                  
+         Default: false (bool)
+
+CINTERPOLATEDUPLICATE PARAMETERS:
+
+     This filter interpolates duplicated frame that are followed by a not duplicate.
+     This allows to keep original full framerate animations while interpolating the above mentioned duplicates.
+ 
+     thr -
+         
+         Duplicate threshold. Higher values means more duplicate.
+         
+         Default: 0.25 (float)
+
+     nt - 
+         
+         Noise threshold. Every difference lower than nt is ignored.
+
+         Default:  5  (int)
+     
+     dClip - 
+
+         Set an external clip for the duplicate detection.
+
+         Default: NULL (clip)
+
+     iClip - 
+
+         Set the clip from which take the interpolate frame.
+         If not specified a default MFlowInter clip will be invoked by the function.
+
+         Default: not set (clip)
+
+CSHARPEN PARAMETERS:
+
+     This filter is a fast solution to sharp a clip with some heuristic solutions for dithering and halo.
+     The first clip is the input, the second clip is a blur filter you must specify.
+     CSharpen(FastBlur(3)) is all you need to do (or Removegrain(12/20)). 
+
+     nt -
+     
+         Noise threshold. Every difference lower than this value is not used for sharpening.
+         This prevent dithering sharpening but some low frequency details may not get sharpened.
+
+         Default: 5 (int)
+
+     mode -
+
+	 mode == 0 CSharpen(FastBlur(3),mode=0) is basically mt_adddiff(mt_makediff(FastBlur(3))) without the nt parameter.
+         mode == 1 does the sqrt of the difference to prevent halo.
+         mode == 2 does atan * sqrt of the difference to get a slightly stronger sharpening.
+
+         Default: 1 (bool)
+
+     Y, U, V -
+
+         Choose which channel to process. If true, the channel is processed, else is copied.
+
+         Default: True, False, False (bool)
+
+CDEHALO PARAMETERS:
+
+     This filter is a fast solution to dehalo a clip with some heuristic solutions for dithering.
+     The first clip is the input, the second clip is a blur filter you must specify.
+     CDeHalo(FastBlur(3)) is all you need to do (or Removegrain(12/20)). 
+
+     nt -
+     
+         Noise threshold. Every difference lower than this value is not used for dehalo.
+         This prevent dithering and low frequency details blur.
+
+         Default: 5 (int)
+
+     mode -
+
+	 mode == 0 CDeHalo(FastBlur(3),mode=0) is basically mt_adddiff(mt_makediff(FastBlur(3)).invert()) without the nt parameter.
+         mode == 1 does the sqrt of the difference to reduce blur.
+         mode == 2 does atan * sqrt of the difference to get a slightly stronger dehalo.
+
+         Default: 1 (bool)
+
+     Y, U, V -
+
+         Choose which channel to process. If true, the channel is processed, else is copied.
+
+         Default: True, False, False (bool)
+
+CANTIALIASING PARAMETERS:
+
+     This filter is a blur based antialiasing. 
+     It does the average of the surrounding pixels and averages that with the current pixel.
+
+     nt -
+     
+         Noise threshold. Every difference lower than this is restored back.
+         This prevent dithering and low frequency details blur.
+
+         Default: 5 (int)
+
+     mode -
+
+	 mode == 0 strongest antialiasing mode.
+         mode == 1 restore some details.
+         mode == 2 restore some details. Should be stronger than mode == 1, but the difference is hard to see.
+
+         Default: 0 (int)
+
+     Y, U, V -
+
+         Choose which channel to process. If true, the channel is processed, else is copied.
+
+         Default: True, False, False (bool)
+
+CTEMPORALSOFTEN PARAMETERS:
+
+     This filter will blend the n-radius frames in one direction instead of both direction,
+     like TemporalSoften does. However it has not a threshold parameter, since I don't see the need of it.
+
+     radius -
+
+        Specify how many frames to blend with the current one.
+
+        Default: 1 (int)
+
+     isb -
+
+        Specify in which direction to take the frames.
+        If true, it takes the previous frames.
+        If false, it takes the following frames.
+
+        Default: false (bool)
+
+     Y, U, V -
+
+         Choose which channel to process. If true, the channel is processed, else is copied.
+
+         Default: True, True, True (bool)
+  
+CDEGRAIN PARAMETERS:
+
+     This filter is a degrain that blends stationary parts of the picture. 
+     It takes the chroma difference into account to reduce blending by using a block based approch.
+     Using this filter I reduce a lossless anime encode with x264 from 1.48gb to 490mb (original source 460mb!) without introducing blending.
+
+     radius -
+
+         Set how much frames in each direction to take into account.
+ 
+         Default: 3 (int)
+
+     nt -
+
+         Any pixel difference value higher than nt is set to 255. 
+         This helps preventing blending.
+
+         Default: 5 (int)
+
+     thr - 
+
+         If the sum of the difference of the block is lower or equal than thr, the block is blended.
+
+	 Default: 32 (int)
+
+     blksize -
+
+         Set the side of the block in which the picture si divided. 
+         For YV12/YV16 the min. blksize is 2. For the others the min. value is 1.
+
+         Default: 4 (int)
+
+     dClip -
+
+         Specify a denoised clip from which to take the difference.
+
+         Default: NULL (clip)
+
+CSCENECHANGE PARAMETERS:
+     
+     This filter will write into a file MSCDetection decision and calculate the average luma of each frame.
+     It will then output a file with a chain of trim that splits your source by scenechanges.
+     All the scenes with an average luma lower than maxLuma will be flagged as [* DARK *].
+
+     sClip -
+
+        Specify an MSCDetection clip. If not specified it will call a preset.
+
+        Default: NULL (clip)
+
+     blksize -
+ 
+        Blocksize of MSCDetection preset.
+
+        Default: 64 (int)
+    
+     thSCD1 - 
+
+        thSCD1 parameter for MSCDetection preset.
+
+        Default: 400 (int)
+
+     thSCD2 - 
+
+        thSCD2 parameter for MSCDetection preset.
+
+        Default: 130 (int)
+
+     minKey - 
+
+        Minimal interval in frames between scene changes. In between scene changes are ignored.
+
+        Default: 30 (int)
+
+     maxLuma - 
+
+        Every scene's average luma lower than maxLuma will output the [* DARK *] flag in the trim file.
+
+        Default: 128 (int)
+        
+     write - 
+        
+        If true, will write a file with the scene changes and the average luma of each frame.
+        If false, you are supposed to use inputTxt=true.
+
+        Default: true (bool)
+
+     inputTxt -
+
+        If true, it will read write=true generated file and output a trim file.
+        If false, you are supposed to use write=true.
+
+        Default: false (bool)
+
+CTELECINE PARAMETERS:
+
+     This filter will do a c/n match for bob=false and p/c and c/n match for bob=true.
+     The matching matrics given by write=true are later used by CDecimate for the decimation process.
+
+     bob -
+ 
+         If true, the output will be bobbed and a c/p match will be performed on the first field
+         and a c/n match on the second. Otherwise, same framerate c/n match.
+
+         Default: false (bool)
+
+     mode -
+
+         Field matching mode.
+         - mode == 0: use vinverse.dll to perform field matching.
+         - mode == 1: same as mode=0, but uses ex_vinverse.
+         - mode == 2: Not anime friendly. Might be good with movies. Only way for moire. Use with CFieldSofter().
+         - mode == 3: Decomb.dll metric (not exactly).
+         - mode == 4: TIVTC.dll metric (not exactly).
+         - mode == 5: new vinverse.dll mode.
+         - mode == 6: same as mode=5, but uses ex_vinverse.
+         
+         Default: 5 (int)
+
+     nt - 
+
+         Difference noise threshold. Influences the matching decision.
+         You are encouraged to tune it to your source,
+         especially if you are getting wrong mouth matching on anime sources.
+         
+         Default: 0 (int)
+
+     ntN - 
+
+         Difference noise threshold for n-matches.
+         Used to increase/lower the bias of n-matches in mode >= 3.
+         
+         Default: nt (int)
+
+     sse -
+
+         If true, the sum of the squared error is used into mode >= 3.
+         The difference is squared after the nt check.
+
+         Default: true (bool)
+
+     thr60i -
+
+         Threshold for pure interlaced content. 
+         Everything with a combed value higher than thr60i is detected as pure interlaced.
+         Used only if bob=true and if the frame is a c-match.
+
+         Default: 1.0 (float)
+
+     nt60i -
+
+         Difference noise threshold for combed detection.
+         Don't mess with me too much.
+
+         Default: 10 (int)
+
+     sstr -
+   
+         vinverse sstr parameter. Influences the matching decision.
+         The more you increase it the more you low the nt parameter. The inverse is also true. 
+         However you are encouraged to try different values to find the best setting for your source.
+
+         Default: 2.7 (float)
+
+     mode2thr -
+
+         Field duplicate detection threshold for mode=2. Use small values.
+
+         Default: 0.005 (float)
+
+     dClip -
+         
+         Specify an external clip for the field matching calculation.
+         The clip must be processed in a field-based way, like: SeparateFields().Removegrain(4).Weave()
+
+         Default: NULL (clip)
+
+     write -
+
+         Write the field matching decision to the CTelecine.txt file.
+         If bob is true, CTelecineBob.txt is also created to track p matches,
+         since a n match on the second field doesn't mean p match on the first field.
+         This last file is of no use to CDecimate.
+         The file are separated for easy implementation of functions who use CTelecine.txt.
+
+         Default: false (bool)
+
+     inputTxt -
+
+         Will reuse CTelecineNew(write=true) file to skip field matching calculation.
+
+         Default: false (bool)
+
+
+CPOSTPROCESSING PARAMETERS:
+
+     This filter is used to deinterlace leftover combed and pure interlaced frames.
+
+     - thr, thr2, edeint, edeint2
+
+         Any frame with a combed value higher than thr2 is REPLACED with a frame from the edeint2 clip.
+         If thr2 doesn't detect the frame as combed, the window based comb detection (thr value) is used, and if combed, 
+         the frame is REPLACED with one from the edeint clip.
+
+         If edeint2 is not passed and isBob=false, the default is QTGMC() and the odd frame is taken.
+         If edeint is not passed CPostProcessingMask() is called from CTools.avsi with edeint2 as deinterlacer.
+         This will help keep most of the progressive part of the frame as long the edeint2 deinterlacer does
+         some spatial or temporal check.
+
+	 For isBob=false, a double framerate edeint/2 clip is expected.
+         For isBob=true, a same framerate edeint/2 clip is expected.
+
+         Default: 3 (int), 6 (int), CPostProcessingMask(edeint2,ntMask) (clip), QTGMC(src) (clip)
+
+     - mode
+
+         - mode==0: use vinverse.dll for the comb detection.
+         - mode==1: same as mode=0, but use ex_vinverse instead.
+         - mode==2: Decomb.dll method (not exactly).
+         - mode==3: TIVTC.dll method (not exactly).
+
+         Default: 0 (int).
+
+     - blksize, blkthr
+
+         blksize is the side of the square used for the comb detection.
+         If the number of combed pixels (see thr) inside a block is >= to blkthr, the frame is detected as combed.
+
+         Default: 8 (int), 32 (int).
+
+     isBob -
+
+         Tell the filter if the source is bobbed in order to return the correct frames.
+         It will work only if it is a field-matching bob, like CTelecine does.
+
+     sstr -
+   
+         vinverse sstr parameter. 
+         Higher value reduce the number of pixels detected as combed. The inverse is true.
+
+         Default: 2.7 (float)
+
+     nt - 
+
+         Difference noise threshold in pure interlaced combing detection. Don't mess with me too much.
+
+         Default: 10 (int)
+
+     ntMask -
+
+         CPostProcessingMask noise threshold, if a edeint is specified, this parameter does nothing.
+
+         Default: 3 (int)
+
+CFIELDDEBLEND PARAMETERS:
+
+     This filter will use a field matched source and remove field blending when a clean duplicate is avaible.
+     The check is done only if the current frame is combed. The adiacent frame which is not combed is used to replace the blended one.
+     You need vinverse.dll in your plugin folder.
+
+     thr, thr2 -
+         
+         Duplicate threshold. Higher values means more duplicate.
+         thr is meant to be a low value.
+         thr2 is meant to be a high value.
+         If one of the twos gives a XOR then the field is replaced with the duplicate.
+         
+         Default: 0.005 (float), 0.25 (float).
+
+     nt - 
+         
+         Noise threshold in duplicate detection. Every difference lower than nt is ignored.
+
+         Default:  5  (int)
+     
+     thrC -
+
+         Comb detection threshold, lower values means more combed frames.
+
+         Default: 1 (int)
+
+     blksize, blkthr -
+
+         blksize is the side of the square used for the comb detection.
+         If the number of combed pixels (see thrC) inside a block is >= to blkthr, the frame is detected as combed.
+
+         Default: 8 (int), 32 (int).
+
+     sstr -
+       
+         vinverse's sstr parameter.
+
+         Default: 2.7 (float)
+
+     dClip - 
+
+         Set an external clip for the duplicate/comb detection.
+
+         Default: NULL (clip)
+
+CDECIMATE PARAMETERS:
+
+     isBob -
+
+         If true the filter will do a 60->24 fps decimation, else 30->24.
+
+         Default: false (bool)
+
+     error -
+
+         Disable CDecimateNew startup error. If false, every error is handled as VFR for lack of data.
+
+         Default: true (bool)
+
+     heuristic - 
+
+         If true, CDecimate will drop the last n of the longest string of n matches.
+         Those cases won't trigger an error anymore (if true).
+         However cases like cncnc are stil treated as VFR due to lack of data.
+         (It might even be a post telecine cut and it would be correct to have VFR).
+
+         Default: true (bool)
+
+     iClip -
+
+         Specify a 24fps interpolated clip to replace VFR section in order to get CFR.
+
+         Default: NULL (clip)
+
+CSETPATTERN PARAMETERS:
+
+     This function will edit CTelecine.txt file to set a field matching pattern in a range of frames.
+
+     start, end -
+
+        The frames in the [start, end] range are the ones that are going to be edited.
+
+        Default: not set (int)
+
+     CCCCC, NNCCC, CNNCCC, CCNNC, CCCNN, NCCCN -
+
+        Use one of them to decide witch pattern to force in the CTelecine.txt file.
+
+        Default: false for all (bool)
+
+CHANGE LIST:
+
+     v1.0.0 
+     - First public release.
+     v1.0.1
+     - Added VFR support on CDecimate, it will now output vfr on CCCCC or duplicate free cycles.
+     - Added CFieldDuplicate to counter moire and get (maybe) better field matching on not anime sources.
+     v1.0.2
+     - Added match parameter to CTelecine.
+     - Added 60i support to CTelecine2.
+     - Added CDecimate2()
+     - Added CSetPattern()
+     - Added CGuessPattern()
+     - Added CFieldDifference()
+     v1.0.3
+     - CDecimate2() bug fix.
+     v1.0.4
+     - Added CTelecineNew()
+     - Added CDecimateNew()
+     - Added CPostProcessing()
+     v1.0.5
+     - Reduced stack in CTelecineNew and CDecimateNew
+     - Now CTelecineNew closes automatically the txt file on last frame.
+     - Speed improvement.
+     v1.0.6
+     - Fixed wrong frame count on CDecimateNew
+     - Now CPP expect same frame rate edeint/2 clip when isBob=true.
+     v1.0.7
+     - Added VFR to CFR support to CDecimateNew.
+     - Fixed VFR file grammar.
+     - Added mode parameter to CTelecineNew. (mode=1 is ex_vinverse).
+     v1.0.8
+     - Added mode=2 and mode2thr paramater in CTelecineNew.
+     - Fixed CTelecineNew(bob=true,inputTxt=true) bug.
+     - Minor speed up for mode=0/1. From 250 fps to 280fps.
+     v1.0.9
+     - Added mode=3 and mode=4 to CTelecineNew.
+     - Added CDegrain.
+     - Added CSharpen.
+     v1.1.0
+     - Removed Sqrt parameter from CSharpen.
+     - Added mode parameter to CSharpen + new sharpening mode.
+     - Added CDeHalo.
+     - Added CAntiAliasing.
+     - Added ntN parameter to CTelecineNew for mode 3, 4.
+     - CTelecineNew default mode is now 3.
+     v1.2.0
+     - CFieldDuplicate removed.
+     - Added th2 and fields paramters to CDuplicate.
+     - CDuplicate now supports Y8, YV12, YV16, YV24 colorspaces.
+     - CDropFrame and CReplaceFrame removed.
+     - Added CReplaceDuplicate + drop parameter.
+     - CReplaceDuplicate supports all avisynth colorspaces.
+     - CInterpolate removed write and inputTxt parameters.
+     - CInterpolate will invoke a preset MFlowInter clip if iClip is not specified.
+     - CInterpolate renamed to CInterpolateDuplicate.
+     - CInterpolateDuplicate supports Y8, YV12, YV16, YV24 colorspaces.
+     - Added Y, U, V parameters to CSharpen, CDeHalo and CAntiAliasing.
+     - CSharpen, CDeHalo and CAntiAliasing now support Y8, YV12, YV16, YV24 colorspaces.
+     - Added CTemporalSoften (Y8, Y12, YV16, YV24).
+     - Added blksize parameter to CDegrain (min 2 for YV12/16).
+     - CDegrain now supports Y8, YV12, YV16, YV24.
+     - Added sClip, minKey, maxLuma, inputTxt, blksize, thSCD1, thSCD2 to CSceneChange.
+     - CSceneChange will now detect dark scenes and if no sClip is passed a preset will be automatically called.
+     - CSceneChange minor changes + Y8, YV12, YV16, YV24 support.
+     - CTelecine and CTelecine2 removed.
+     - CTelecineNew renamed to CTelecine.
+     - CTelecine now supports Y8, YV12, YV16, YV24 colospaces.
+     - CTelecine rewritten + new modes, see ReadMe for the updates.
+     - CPostProcessing now supports Y8, YV12, YV16, YV24 colorspaces.
+     - CPostProcessing rewritten, see ReadMe for the updates.
+     - CFieldDeBlend now supports Y8, YV12, YV16, YV24 colorspaces.
+     - CFieldDeBlend rewritten, see ReadMe for the updates.
+     - CGuessPattern removed.
+     - CFieldDifference removed.
+     - CDecimate and CDecimate2 removed.
+     - CDecimateNew renamed to CDecimate.
+     - Removed stuff from CTools.avsi.
+     - Added CResize and xTo24fps functions to CTools.avsi.
+ 
+
