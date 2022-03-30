@@ -632,5 +632,8 @@ CHANGE LIST:
      - CDecimateNew renamed to CDecimate.
      - Removed stuff from CTools.avsi.
      - Added CResize and xTo24fps functions to CTools.avsi.
+     v1.2.1
+     - CTelecine bug fix.
+
  
 
