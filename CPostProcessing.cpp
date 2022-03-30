@@ -1,7 +1,7 @@
 #include "CPostProcessing.h"
 
-CPostProcessing::CPostProcessing(PClip _child, int _thr, int _thr2, int _mode, int _blksize, int _blkthr, bool _isBob, float _sstr, int _nt, int _ntMask, PClip _edeint, PClip _edeint2, IScriptEnvironment* env)
-    : GenericVideoFilter(_child), thr(_thr), thr2(_thr2), mode(_mode), blksize(_blksize), blkthr(_blkthr), isBob(_isBob), sstr(_sstr), nt(_nt), ntMask(_ntMask), edeint(_edeint), edeint2(_edeint2)
+CPostProcessing::CPostProcessing(PClip _child, int _thr, int _thr2, int _mode, int _blksize, int _blkthr, bool _isBob, float _sstr, int _nt, int _ntMask, PClip _edeint, PClip _edeint2, PClip _dClip, IScriptEnvironment* env)
+    : GenericVideoFilter(_child), thr(_thr), thr2(_thr2), mode(_mode), blksize(_blksize), blkthr(_blkthr), isBob(_isBob), sstr(_sstr), nt(_nt), ntMask(_ntMask), edeint(_edeint), edeint2(_edeint2), dClip(_dClip)
 {
     if (!vi.IsY8() && !vi.IsYV12() && !vi.IsYV16() && !vi.IsYV24())
     {
@@ -25,6 +25,11 @@ CPostProcessing::CPostProcessing(PClip _child, int _thr, int _thr2, int _mode, i
             args[0] = C;
             args[1] = sstr;
             CV = env->Invoke("Vinverse", AVSValue(args, 2)).AsClip();
+            if (dClip)
+            {
+                args[0] = dClip;
+                dClipV = env->Invoke("Vinverse", AVSValue(args, 2)).AsClip();
+            }
         }
         catch (IScriptEnvironment::NotFound)
         {
@@ -39,6 +44,11 @@ CPostProcessing::CPostProcessing(PClip _child, int _thr, int _thr2, int _mode, i
             args[0] = C;
             args[1] = sstr;
             CV = env->Invoke("ex_vinverse", AVSValue(args, 2)).AsClip();
+            if (dClip)
+            {
+                args[0] = dClip;
+                dClipV = env->Invoke("ex_vinverse", AVSValue(args, 2)).AsClip();
+            }
         }
         catch (IScriptEnvironment::NotFound)
         {
@@ -82,9 +92,9 @@ CPostProcessing::CPostProcessing(PClip _child, int _thr, int _thr2, int _mode, i
 
 PVideoFrame __stdcall CPostProcessing::GetFrame(int n, IScriptEnvironment* env) 
 {
-    PVideoFrame c = C->GetFrame(n, env);
+    PVideoFrame c = dClip ? dClip->GetFrame(n, env) : C->GetFrame(n, env);
     PVideoFrame mask = env->NewVideoFrame(vi);
-    PVideoFrame cv = mode == 0 || mode == 1 ? CV->GetFrame(n, env) : NULL;
+    PVideoFrame cv = mode == 0 || mode == 1 ? dClip ? dClipV->GetFrame(n, env) : CV->GetFrame(n, env) : NULL;
 
     int order = child->GetParity(0) ? 1 : 0;
     bool is60i = mode == 0 || mode == 1 ? CPostProcessing_mode01(c, cv, mask, order, nt, thr, thr2, vi.IsY8())
@@ -105,6 +115,7 @@ PVideoFrame __stdcall CPostProcessing::GetFrame(int n, IScriptEnvironment* env)
     }
     else
     {
+        c = dClip ? C->GetFrame(n, env) : c;
         return c;
     }
 }

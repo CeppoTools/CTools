@@ -22,9 +22,11 @@ class CPostProcessing : public GenericVideoFilter
     int mode;
     int blkthr;
     int blksize;
+    PClip dClip;
+    PClip dClipV;
 
 public:
-    CPostProcessing(PClip _child, int _thr, int _thr2, int _mode, int _blksize, int _blkthr, bool _isBob, float _sstr, int _nt, int _ntMask, PClip _edeint, PClip _edeint2, IScriptEnvironment* env);
+    CPostProcessing(PClip _child, int _thr, int _thr2, int _mode, int _blksize, int _blkthr, bool _isBob, float _sstr, int _nt, int _ntMask, PClip _edeint, PClip _edeint2, PClip _dClip, IScriptEnvironment* env);
     PVideoFrame __stdcall GetFrame(int n, IScriptEnvironment* env);
 };
 

@@ -68,7 +68,7 @@ AVSValue __cdecl Create_CTelecine(AVSValue args, void* user_data, IScriptEnviron
 
 AVSValue __cdecl Create_CPostProcessing(AVSValue args, void* user_data, IScriptEnvironment* env)
 {
-    return new CPostProcessing(args[0].AsClip(), args[1].AsInt(3), args[2].AsInt(6), args[3].AsInt(0), args[4].AsInt(8), args[5].AsInt(32), args[6].AsBool(false), args[7].AsFloatf(2.7f), args[8].AsInt(10), args[9].AsInt(3), args[10].IsClip() ? args[10].AsClip() : NULL, args[11].IsClip() ? args[11].AsClip() : NULL, env);
+    return new CPostProcessing(args[0].AsClip(), args[1].AsInt(3), args[2].AsInt(6), args[3].AsInt(0), args[4].AsInt(8), args[5].AsInt(32), args[6].AsBool(false), args[7].AsFloatf(2.7f), args[8].AsInt(10), args[9].AsInt(3), args[10].IsClip() ? args[10].AsClip() : NULL, args[11].IsClip() ? args[11].AsClip() : NULL, args[12].IsClip() ? args[12].AsClip() : NULL, env);
 }
 
 AVSValue __cdecl Create_CFieldDeBlend(AVSValue args, void* user_data, IScriptEnvironment* env)
@@ -101,7 +101,7 @@ extern "C" __declspec(dllexport) const char* __stdcall AvisynthPluginInit3(IScri
     env->AddFunction("CTemporalSoften", "c[radius]i[isb]b[Y]b[U]b[V]b", Create_CTemporalSoften, 0);
     env->AddFunction("CSceneChange", "c[sClip]c[blksize]i[thSCD1]i[thSCD2]i[minKey]i[maxLuma]i[write]b[inputTxt]b", Create_CSceneChange, 0);
     env->AddFunction("CTelecine", "c[bob]b[mode]i[nt]i[ntN]i[sse]b[thr60i]f[nt60i]i[sstr]f[mode2thr]f[dClip]c[write]b[inputTxt]b", Create_CTelecine, 0);
-    env->AddFunction("CPostProcessing", "c[thr]i[thr2]i[mode]i[blksize]i[blkthr]i[isBob]b[sstr]f[nt]i[ntMask]i[edeint]c[edeint2]c", Create_CPostProcessing, 0);
+    env->AddFunction("CPostProcessing", "c[thr]i[thr2]i[mode]i[blksize]i[blkthr]i[isBob]b[sstr]f[nt]i[ntMask]i[edeint]c[edeint2]c[dClip]c", Create_CPostProcessing, 0);
     env->AddFunction("CFieldDeBlend", "c[thr]f[thr2]f[nt]i[thrC]i[blksize]i[blkthr]i[sstr]f[dClip]c", Create_CFieldDeBlend, 0);
     env->AddFunction("CDecimate", "c[isBob]b[error]b[heuristic]b[iClip]c", Create_CDecimate, 0);
     env->AddFunction("CSetPattern", "c[start]i[end]i[CCCCC]b[NNCCC]b[CNNCC]b[CCNNC]b[CCCNN]b[NCCCN]b", Create_CSetPattern, 0);
