@@ -1,6 +1,5 @@
 # CTools
 
-
                             CTools  -  HELP FILE
 
 
@@ -20,7 +19,7 @@ GENERAL INFO:
      CSceneChange(clip "sClip", int "blksize", int "thSCD1", int "thSCD2", int "minKey", int "maxLuma", bool "write", bool "inputTxt")
 
      CTelecine(bool "bob", int "mode", int "nt", int "ntN", bool "sse", float "thr60i", int "nt60i", float "sstr", float "mode2thr", clip "dClip", bool "write", bool "inputTxt")
-     CPostProcessing(int "thr", int "thr2", int "mode", int "blksize", int "blkthr", bool "isBob", float "sstr", int "nt", int "ntMask", clip "edeint", clip "edeint2")
+     CPostProcessing(int "thr", int "thr2", int "mode", int "blksize", int "blkthr", bool "isBob", float "sstr", int "nt", int "ntMask", clip "edeint", clip "edeint2", clip "dClip")
      CFieldDeBlend(float "thr", float "thr2", int "nt", int "thrC", int "blksize", int "blkthr", float "sstr", clip "dClip")
      CDecimate(bool "isBob", bool "error", bool "heuristic", clip "iClip")
      CSetPattern(int "start", int "end", bool "CCCCC", bool "NNCCC", bool "CNNCC", bool "CCNNC", bool "CCCNN", bool "NCCCN")
@@ -462,6 +461,12 @@ CPOSTPROCESSING PARAMETERS:
 
          Default: 3 (int)
 
+     dClip -
+
+         Specify a prefiltered clip on which do the comb detection.
+
+         Default: NULL (clip)
+
 CFIELDDEBLEND PARAMETERS:
 
      This filter will use a field matched source and remove field blending when a clean duplicate is avaible.
@@ -634,6 +639,6 @@ CHANGE LIST:
      - Added CResize and xTo24fps functions to CTools.avsi.
      v1.2.1
      - CTelecine bug fix.
-
- 
+     v1.2.2
+     - Added dClip to CPost Processing.
 
